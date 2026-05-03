@@ -1,0 +1,17 @@
+﻿using Application.Dto;
+using AutoMapper;
+using Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Application.Profiles
+{
+    public class StopPlaceProfile : Profile
+    {
+        public StopPlaceProfile() 
+        {
+            CreateMap<StopPlaceAddRequest, StopPlace>();
+        }
+    }
+}

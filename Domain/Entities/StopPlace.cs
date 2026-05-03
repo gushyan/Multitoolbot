@@ -8,8 +8,6 @@ namespace Domain.Entities
 {
     public class StopPlace
     {
-        public long Id { get; set; }
-
         public string Name { get; set; }
 
         public long ApiId { get; set; }

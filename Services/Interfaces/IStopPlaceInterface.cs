@@ -15,5 +15,7 @@ namespace Services.Interfaces
         public Task DeleteStopPlaceByNameAsync(string name, CancellationToken token);
 
         public Task UpdateStopPlaceNameAsync(StopPlaceUpdateNameRequest updateNameRequest, CancellationToken token);
+
+        public Task<List<string>> GetAllStopPlaces(CancellationToken token);
     }
 }

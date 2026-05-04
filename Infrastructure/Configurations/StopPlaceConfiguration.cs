@@ -9,9 +9,8 @@ namespace Infrastructure.Configurations
         public void Configure(EntityTypeBuilder<StopPlace> builder)
         {
             builder.HasKey(s => s.Id);
-            builder
-                .HasIndex(s => s.Name)
-                .IsUnique();
+            builder.Property(s => s.Id)
+                .ValueGeneratedNever();
         }
     }
 }

@@ -8,7 +8,7 @@ using System.Data;
 
 namespace Services.Classes
 {
-    public class FavStopsService: IFavStops
+    public class FavStopsService: IFavStopsService
     {
         private readonly BusDbContext _dbcontext;
         private readonly IMapper _mapper;

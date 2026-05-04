@@ -7,9 +7,9 @@ using System.Text;
 
 namespace Application.Profiles
 {
-    public class StopPlaceProfile : Profile
+    public class FavStopsProfile : Profile
     {
-        public StopPlaceProfile() 
+        public FavStopsProfile() 
         {
             CreateMap<FavStopsResponse, FavStops>().ReverseMap();
         }

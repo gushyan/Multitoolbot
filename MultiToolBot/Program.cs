@@ -44,10 +44,10 @@ try
 
     builder.Services.AddAutoMapper(cfg =>
     {
-        cfg.AddMaps(typeof(StopPlaceProfile).Assembly);
+        cfg.AddMaps(typeof(FavStopsProfile).Assembly);
     });
 
-    builder.Services.AddScoped<IFavStops, FavStopsService>();
+    builder.Services.AddScoped<IFavStopsService, FavStopsService>();
 
 
     builder.Services.AddHttpClient<IPermGortransClient, PermGortransClient>(client =>

@@ -6,7 +6,7 @@ using Application.Dto;
 
 namespace Services.Interfaces
 {
-    public interface IFavStops
+    public interface IFavStopsService
     {
         public Task AddFavoriteStopsByChatIdAsync(FavStopsAddRequest addRequest, CancellationToken ct);
         public Task DeleteFavoriteStopsByChatIdAsync(FavStopsDeleteRequest deleteRequest, CancellationToken ct);

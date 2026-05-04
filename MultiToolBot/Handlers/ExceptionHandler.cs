@@ -22,13 +22,20 @@ namespace Multitoolbot.Handlers
         {
             _logger.LogError(ex, "Ошибка при обработке апдейта {Id}. Тип: {Type}", update.Id, update.Type);
 
+            string message = "";
+            message = ex switch
+            {
+                KeyNotFoundException => ex.Message,
+                _ => "Произошла ошибка. Попробуйте позже."
+            };
+
             long? chatId = update.Message?.Chat.Id ?? update.CallbackQuery?.Message?.Chat.Id;
             if (chatId.HasValue)
             {
-                await _botClient.SendMessage(chatId.Value, "Произошла ошибка. Попробуйте позже.", cancellationToken: ct);
+                await _botClient.SendMessage(chatId.Value, message, cancellationToken: ct);
             }
         }
 
-
+        
     }
 }

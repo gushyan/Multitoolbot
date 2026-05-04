@@ -20,5 +20,10 @@ namespace PermGorTrans.ApiClient
         {
             return await _httpClient.GetFromJsonAsync<List<ExtStopPlace>>("stops", ct) ?? new();
         }
+
+        public async Task<ArrivalResponse> GetArrivalTimesByStops(int id, CancellationToken ct) 
+        {
+            return await _httpClient.GetFromJsonAsync<ArrivalResponse>($"arrival-times-vehicles/{id}", ct);
+        }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using FuzzySharp;
 using Multitoolbot.Cache;
-using Services.Interfaces;
+using PermGorTrans.ApiClient;
+using PermGorTrans.ApiClient.Models;
+using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -11,11 +13,13 @@ namespace MultitoolBot
     {
         private readonly ITelegramBotClient _botClient;
         private readonly IStopPlaceCache _cache;
+        private readonly IPermGortransClient _client;
 
-        public MultiToolBot(ITelegramBotClient botClient, IStopPlaceCache cache)
+        public MultiToolBot(ITelegramBotClient botClient, IStopPlaceCache cache, IPermGortransClient client)
         {
             _botClient = botClient;
             _cache = cache;
+            _client = client;
         }
 
         public async Task HandleMessageAsync(Message message, CancellationToken ct)
@@ -25,24 +29,27 @@ namespace MultitoolBot
 
             if (text == "/start")
             {
-                await _botClient.SendMessage(chatId, "Привет! Я бот, который показывает расписание автобусов на конкретной остановки. " +
+                await _botClient.SendMessage(chatId, "Привет! Я бот, который показывает расписание автобусов на конкретной остановке. " +
                     "Помимо этого в мои обязанности входит посредничество между тобой и Gemini \n" +
                     "А также у меня открытый код https://github.com/gushyan/Multitoolbot");
                 return;
             }
-
+            else if (text == "/help")
+            {
+                await _botClient.SendMessage(chatId, "На данный момент можно получить только расписание автобусов на конкретной остановке." +
+                    " Для этого просто отправь часть названия остановки. Об остальном позабочусь я :)");
+            }
             else
             {
 
                 var term = text.ToLower();
                 var stopPlaces = _cache.Stops
                     .Select(stop => new { Stop = stop, Score = Fuzz.PartialRatio(term, stop.Name.ToLower()) })
-                    .Where(x => x.Score > 75) // Высокий порог, чтобы не искать остановки в обычных словах
+                    .Where(x => x.Score > 75)
                     .OrderByDescending(x => x.Score)
                     .Select(x => x.Stop)
+                    .Take(10)
                     .ToList();
-
-                //var stopPlaces = _cache.Stops.Take(5).ToList();
 
                 if (!stopPlaces.Any())
                 {
@@ -90,14 +97,68 @@ namespace MultitoolBot
         {
             var data = callbackQuery.Data;
 
-            if (data.StartsWith("select_stop:"))
+            if (data.StartsWith("stop:"))
             {
-                var stopName = data.Replace("select_stop:", "");
+                var idString = data.Replace("stop:", "");
 
-                await _botClient.AnswerCallbackQuery(callbackQuery.Id, $"Вы выбрали {stopName}", cancellationToken: ct);
+                if (int.TryParse(idString, out int stopId))
+                {
+                    var stop = _cache.Stops.FirstOrDefault(s => s.Id == stopId);
+                    string stopName = stop != null ? stop.Name : "Неизвестная остановка";
 
-                await _botClient.SendMessage(callbackQuery.Message.Chat.Id, $"Расписание для остановки {stopName}: ...");
+                    await _botClient.AnswerCallbackQuery(callbackQuery.Id, $"Загружаю расписание...", cancellationToken: ct);
+
+                    ArrivalResponse arrivalData = await _client.GetArrivalTimesByStops(stopId, ct);
+
+                    string replyText = FormatArrivalMessage(arrivalData, stopName);
+
+                    await _botClient.SendMessage(
+                        chatId: callbackQuery.Message.Chat.Id,
+                        text: replyText,
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        cancellationToken: ct);
+                }
             }
+        }
+        private string FormatArrivalMessage(ArrivalResponse response, string stopName)
+        {
+            if (response?.RouteTypes == null || response.RouteTypes.Count == 0)
+            {
+                return $"📭 На остановке **{stopName}** в ближайшее время транспорта не ожидается.";
+            }
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"🚏 **Остановка:** {stopName}\n");
+
+            foreach (var type in response.RouteTypes)
+            {
+                string icon = type.RouteTypeName.ToLower().Contains("трамва") ? "🚋" : "🚌";
+                sb.AppendLine($"{icon} *{type.RouteTypeName}*");
+
+                foreach (var route in type.Routes)
+                {
+                    var arrivals = new List<string>();
+                    foreach (var vehicle in route.Vehicles)
+                    {
+                        string timeOnly = vehicle.ArrivalTime.Length >= 5
+                            ? vehicle.ArrivalTime.Substring(0, 5)
+                            : vehicle.ArrivalTime;
+
+                        string timeStr;
+                        if (vehicle.ArrivalMinutes == 0) timeStr = "прибывает";
+                        else if (vehicle.ArrivalMinutes < 0) timeStr = "уже ушел"; 
+                        else timeStr = $"{vehicle.ArrivalMinutes} мин";
+
+                        arrivals.Add($"{timeStr} ({timeOnly})");
+                    }
+
+                    sb.AppendLine($"🔹 **№{route.RouteNumber}**: {string.Join(", ", arrivals)}");
+                }
+                sb.AppendLine();
+            }
+
+            return sb.ToString().TrimEnd();
         }
     }
 }
+

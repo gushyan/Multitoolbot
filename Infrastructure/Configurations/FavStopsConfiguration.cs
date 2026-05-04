@@ -4,12 +4,12 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Configurations
 {
-    public class StopPlaceConfiguration : IEntityTypeConfiguration<StopPlace>
+    public class FavStopsConfiguration : IEntityTypeConfiguration<FavStops>
     {
-        public void Configure(EntityTypeBuilder<StopPlace> builder)
+        public void Configure(EntityTypeBuilder<FavStops> builder)
         {
-            builder.HasKey(s => s.Id);
-            builder.Property(s => s.Id)
+            builder.HasKey(s => s.ChatId);
+            builder.Property(s => s.ChatId)
                 .ValueGeneratedNever();
         }
     }

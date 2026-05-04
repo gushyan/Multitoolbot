@@ -124,16 +124,15 @@ namespace MultitoolBot
         {
             if (response?.RouteTypes == null || response.RouteTypes.Count == 0)
             {
-                return $"📭 На остановке **{stopName}** в ближайшее время транспорта не ожидается.";
+                return $" На остановке {stopName} в ближайшее время транспорта не ожидается.";
             }
 
             var sb = new StringBuilder();
-            sb.AppendLine($"🚏 **Остановка:** {stopName}\n");
+            sb.AppendLine($" *Остановка*: {stopName}\n");
 
             foreach (var type in response.RouteTypes)
             {
-                string icon = type.RouteTypeName.ToLower().Contains("трамва") ? "🚋" : "🚌";
-                sb.AppendLine($"{icon} *{type.RouteTypeName}*");
+                sb.AppendLine($"*{type.RouteTypeName}*");
 
                 foreach (var route in type.Routes)
                 {
@@ -146,13 +145,21 @@ namespace MultitoolBot
 
                         string timeStr;
                         if (vehicle.ArrivalMinutes == 0) timeStr = "прибывает";
-                        else if (vehicle.ArrivalMinutes < 0) timeStr = "уже ушел"; 
-                        else timeStr = $"{vehicle.ArrivalMinutes} мин";
+                        else if (vehicle.ArrivalMinutes < 0) timeStr = "уже ушел";
+                        else 
+                        { 
+                            var hours = vehicle.ArrivalMinutes / 60;
+                            if(hours > 0)
+                                timeStr = $" {hours} ч {vehicle.ArrivalMinutes - hours * 60} мин";
+                            else
+                                timeStr = $"{vehicle.ArrivalMinutes} мин";
+
+                        }
 
                         arrivals.Add($"{timeStr} ({timeOnly})");
                     }
 
-                    sb.AppendLine($"🔹 **№{route.RouteNumber}**: {string.Join(", ", arrivals)}");
+                    sb.AppendLine($" *{route.RouteNumber}*: {string.Join(", ", arrivals)}");
                 }
                 sb.AppendLine();
             }

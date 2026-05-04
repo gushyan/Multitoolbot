@@ -47,7 +47,7 @@ try
         cfg.AddMaps(typeof(StopPlaceProfile).Assembly);
     });
 
-    builder.Services.AddScoped<IStopPlaceInterface, StopPlaceService>();
+    builder.Services.AddScoped<IFavStops, FavStopsService>();
 
 
     builder.Services.AddHttpClient<IPermGortransClient, PermGortransClient>(client =>

@@ -9,7 +9,7 @@ namespace Infrastructure
 {
     public class BusDbContext : DbContext
     {
-        public DbSet<StopPlace> StopPlaces { get; set; }
+        public DbSet<FavStops> FavStops { get; set; }
 
         public BusDbContext(DbContextOptions options) : base(options)
         { }

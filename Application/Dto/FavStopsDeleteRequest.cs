@@ -4,5 +4,5 @@ using System.Text;
 
 namespace Application.Dto
 {
-    public record StopPlaceUpdateNameRequest(string OldName, string NewName);
+    public record FavStopsDeleteRequest(long chatId, int stopId);
 }

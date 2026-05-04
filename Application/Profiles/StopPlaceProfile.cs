@@ -11,7 +11,7 @@ namespace Application.Profiles
     {
         public StopPlaceProfile() 
         {
-            CreateMap<StopPlaceAddRequest, StopPlace>();
+            CreateMap<FavStopsResponse, FavStops>().ReverseMap();
         }
     }
 }

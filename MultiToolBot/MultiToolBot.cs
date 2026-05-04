@@ -1,5 +1,6 @@
 ﻿using Application.Dto;
 using FuzzySharp;
+using Multitoolbot;
 using Multitoolbot.Cache;
 using PermGorTrans.ApiClient;
 using PermGorTrans.ApiClient.Models;
@@ -8,7 +9,6 @@ using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace MultitoolBot
 {
@@ -18,13 +18,15 @@ namespace MultitoolBot
         private readonly IStopPlaceCache _cache;
         private readonly IPermGortransClient _client;
         private readonly IFavStopsService _stopsService;
+        private readonly IStopLogic _stopBot;
 
-        public MultiToolBot(ITelegramBotClient botClient, IStopPlaceCache cache, IPermGortransClient client, IFavStopsService stopsService)
+        public MultiToolBot(ITelegramBotClient botClient, IStopPlaceCache cache, IPermGortransClient client, IFavStopsService stopsService, IStopLogic stopBot)
         {
             _botClient = botClient;
             _cache = cache;
             _client = client;
             _stopsService = stopsService;
+            _stopBot = stopBot;
         }
 
         public async Task HandleMessageAsync(Message message, CancellationToken ct)
@@ -54,7 +56,7 @@ namespace MultitoolBot
             {
                 var idString = data.Replace("stop:", "");
 
-                if (int.TryParse(idString, out int stopId))
+                if (int.TryParse(idString, out int stopId)) // дублирование со строкой 87
                 {
                     var stop = _cache.Stops.FirstOrDefault(s => s.Id == stopId);
                     if (stop == null)
@@ -65,7 +67,7 @@ namespace MultitoolBot
                             showAlert: false,
                             cancellationToken: ct);
                         return;
-                    }
+                    }                                       // конец дублирования
 
                     string stopName = stop.Name;
 
@@ -73,7 +75,7 @@ namespace MultitoolBot
 
                     ArrivalResponse arrivalData = await _client.GetArrivalTimesByStops(stopId, ct);
 
-                    string replyText = FormatArrivalMessage(arrivalData, stopName);
+                    string replyText = _stopBot.FormatArrivalMessage(arrivalData, stopName);
 
                     await _botClient.SendMessage(
                         chatId: callbackQuery.Message.Chat.Id,
@@ -82,43 +84,36 @@ namespace MultitoolBot
                         cancellationToken: ct);
                 }
             }
-            else if (data.StartsWith("choose:"))
-            {
-                var idString = data.Replace("choose:", "");
-                if (int.TryParse(idString, out int stopId))
-                {
-                    var stop = _cache.Stops.FirstOrDefault(s => s.Id == stopId);
-                    if (stop == null)
-                    {
-                        await _botClient.AnswerCallbackQuery(
-                            callbackQueryId: callbackQuery.Id,
-                            text: "Эта кнопка устарела. Пожалуйста, воспользуйтесь поиском снова.",
-                            showAlert: false,
-                            cancellationToken: ct);
-                        return;
-                    }
+            //else if (data.StartsWith("choose:")) // пока не реализовано
+            //{
+            //    var idString = data.Replace("choose:", "");
+            //    if (int.TryParse(idString, out int stopId))
+            //    {
+            //        var stop = _cache.Stops.FirstOrDefault(s => s.Id == stopId);
+            //        if (stop == null)
+            //        {
+            //            await _botClient.AnswerCallbackQuery(
+            //                callbackQueryId: callbackQuery.Id,
+            //                text: "Эта кнопка устарела. Пожалуйста, воспользуйтесь поиском снова.",
+            //                showAlert: false,
+            //                cancellationToken: ct);
+            //            return;
+            //        }
 
-                    await _stopsService.AddFavoriteStopsByChatIdAsync(new FavStopsAddRequest(callbackQuery.Message.Chat.Id, stopId), ct);
+            //        await _stopsService.AddFavoriteStopsByChatIdAsync(new FavStopsAddRequest(callbackQuery.Message.Chat.Id, stopId), ct);
 
-                    await _botClient.SendMessage(
-                        chatId: callbackQuery.Message.Chat.Id,
-                        text: $"Остановка {stop.Name} была добавлена в избранное",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                        cancellationToken: ct);
-                }
-            }
+            //        await _botClient.SendMessage(
+            //            chatId: callbackQuery.Message.Chat.Id,
+            //            text: $"Остановка {stop.Name} была добавлена в избранное",
+            //            parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+            //            cancellationToken: ct);
+            //    }
+            //}
         }
 
         private async Task ShowStopsAsync(string text, string reason , long chatId, CancellationToken ct) 
         {
-            var term = text.ToLower();
-            var stopPlaces = _cache.Stops
-                .Select(stop => new { Stop = stop, Score = Fuzz.PartialRatio(term, stop.Name.ToLower()) })
-                .Where(x => x.Score > 75)
-                .OrderByDescending(x => x.Score)
-                .Select(x => x.Stop)
-                .Take(10)
-                .ToList();
+            var stopPlaces = _stopBot.SearchStops(text);
 
             if (stopPlaces.Count == 0)
             {
@@ -126,19 +121,10 @@ namespace MultitoolBot
                 return;
             }
 
-            var buttons = stopPlaces.Select(stop =>
+            var buttons = stopPlaces.Select(stop =>                                                                     
             {
                 string cleanNote = stop.Note ?? "";
-
-                if (!string.IsNullOrEmpty(cleanNote) && cleanNote.Contains(stop.Name, StringComparison.OrdinalIgnoreCase))
-                {
-                    cleanNote = cleanNote.Replace(stop.Name, "", StringComparison.OrdinalIgnoreCase)
-                                         .Replace("по ", "", StringComparison.OrdinalIgnoreCase)
-                                         .Trim(' ', ',', '(', ')');
-                }
-
-                cleanNote = cleanNote.Replace("в город", "➡️ в город")
-                                     .Replace("из города", "⬅️ из города");
+                cleanNote = _stopBot.EditNamesStops(cleanNote, stop.Name);
 
                 string buttonText = string.IsNullOrWhiteSpace(cleanNote)
                     ? stop.Name
@@ -184,53 +170,6 @@ namespace MultitoolBot
             var favoritfaeStops = _cache.Stops.Join(stops.stopIds, o => o.Id, s => s, (cacheStop, favId) => cacheStop);
 
             return favoritfaeStops.ToList();
-        }
-
-        private string FormatArrivalMessage(ArrivalResponse response, string stopName)
-        {
-            if (response?.RouteTypes == null || response.RouteTypes.Count == 0)
-            {
-                return $" На остановке {stopName} в ближайшее время транспорта не ожидается.";
-            }
-
-            var sb = new StringBuilder();
-            sb.AppendLine($" *Остановка*: {stopName}\n");
-
-            foreach (var type in response.RouteTypes)
-            {
-                sb.AppendLine($"*{type.RouteTypeName}*");
-
-                foreach (var route in type.Routes)
-                {
-                    var arrivals = new List<string>();
-                    foreach (var vehicle in route.Vehicles)
-                    {
-                        string timeOnly = vehicle.ArrivalTime.Length >= 5
-                            ? vehicle.ArrivalTime.Substring(0, 5)
-                            : vehicle.ArrivalTime;
-
-                        string timeStr;
-                        if (vehicle.ArrivalMinutes == 0) timeStr = "прибывает";
-                        else if (vehicle.ArrivalMinutes < 0) timeStr = "уже ушел";
-                        else
-                        {
-                            var hours = vehicle.ArrivalMinutes / 60;
-                            if (hours > 0)
-                                timeStr = $" {hours} ч {vehicle.ArrivalMinutes - hours * 60} мин";
-                            else
-                                timeStr = $"{vehicle.ArrivalMinutes} мин";
-
-                        }
-
-                        arrivals.Add($"{timeStr} ({timeOnly})");
-                    }
-
-                    sb.AppendLine($" *{route.RouteNumber}*: {string.Join(", ", arrivals)}");
-                }
-                sb.AppendLine();
-            }
-
-            return sb.ToString().TrimEnd();
         }
     }
 }

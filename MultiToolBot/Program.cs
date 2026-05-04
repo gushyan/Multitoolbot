@@ -62,8 +62,6 @@ try
 
     builder.Services.AddScoped<MultitoolBot.MultiToolBot>();
 
-   
-
     builder.Services.AddScoped<ExceptionHandler>();
 
     builder.Services.AddHostedService<TelegramUpdateHandler>();

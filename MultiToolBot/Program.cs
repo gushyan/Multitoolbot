@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Multitoolbot;
 using Multitoolbot.Cache;
 using Multitoolbot.Handlers;
 using PermGorTrans.ApiClient;
@@ -59,6 +60,8 @@ try
     builder.Services.AddSingleton<IStopPlaceCache, StopPlaceCache>();
 
     builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botToken));
+
+    builder.Services.AddScoped<IStopLogic, StopLogic>();
 
     builder.Services.AddScoped<MultitoolBot.MultiToolBot>();
 

@@ -67,7 +67,7 @@ namespace Multitoolbot
 
                         string timeStr;
                         if (vehicle.ArrivalMinutes == 0) timeStr = "прибывает";
-                        else if (vehicle.ArrivalMinutes < 0) timeStr = "уже ушел";
+                        else if (vehicle.ArrivalMinutes < 0) timeStr = "прибудет в";
                         else
                         {
                             var hours = vehicle.ArrivalMinutes / 60;

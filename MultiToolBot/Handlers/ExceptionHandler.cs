@@ -1,7 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -29,13 +26,23 @@ namespace Multitoolbot.Handlers
                 _ => "Произошла ошибка. Попробуйте позже."
             };
 
-            long? chatId = update.Message?.Chat.Id ?? update.CallbackQuery?.Message?.Chat.Id;
-            if (chatId.HasValue)
+            long? chatId =
+                update.Message?.Chat.Id
+                ?? update.CallbackQuery?.Message?.Chat.Id
+                ?? update.CallbackQuery?.From?.Id;
+            try
             {
-                await _botClient.SendMessage(chatId.Value, message, cancellationToken: ct);
+                if (chatId.HasValue)
+                {
+                    await _botClient.SendMessage(chatId.Value, message, cancellationToken: ct);
+                }
+            }
+            catch (Exception sendEx)
+            {
+                _logger.LogError(sendEx, "Ошибка при отправке сообщения об ошибке");
             }
         }
 
-        
+
     }
 }

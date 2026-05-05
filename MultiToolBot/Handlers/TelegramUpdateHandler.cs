@@ -6,6 +6,7 @@ using MultitoolBot;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Polling;
 using Multitoolbot.Handlers;
+using Telegram.Bot.Types.InlineQueryResults;
 
 public class TelegramUpdateHandler : BackgroundService
 {
@@ -55,6 +56,10 @@ public class TelegramUpdateHandler : BackgroundService
             else if (update.CallbackQuery is { } callbackQuery)
             {
                 await controller.HandleCallbackAsync(callbackQuery, ct);
+            }
+            else if (update.InlineQuery is { } inlineQuery)
+            {
+                await controller.HandleInlineQueryAsync(inlineQuery, ct);
             }
         }
         catch (Exception ex)

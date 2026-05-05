@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Multitoolbot
+namespace Multitoolbot.Logic
 {
     public interface IStopLogic
     {

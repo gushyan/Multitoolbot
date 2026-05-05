@@ -1,13 +1,14 @@
 ﻿using Application.Dto;
 using FuzzySharp;
-using Multitoolbot;
 using Multitoolbot.Cache;
+using Multitoolbot.Logic;
 using PermGorTrans.ApiClient;
 using PermGorTrans.ApiClient.Models;
 using Services.Interfaces;
 using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace MultitoolBot
@@ -16,17 +17,17 @@ namespace MultitoolBot
     {
         private readonly ITelegramBotClient _botClient;
         private readonly IStopPlaceCache _cache;
-        private readonly IPermGortransClient _client;
         private readonly IFavStopsService _stopsService;
         private readonly IStopLogic _stopBot;
+        private readonly IStopService _stopService;
 
-        public MultiToolBot(ITelegramBotClient botClient, IStopPlaceCache cache, IPermGortransClient client, IFavStopsService stopsService, IStopLogic stopBot)
+        public MultiToolBot(ITelegramBotClient botClient, IStopPlaceCache cache, IFavStopsService stopsService, IStopLogic stopBot, IStopService stopService)
         {
             _botClient = botClient;
             _cache = cache;
-            _client = client;
             _stopsService = stopsService;
             _stopBot = stopBot;
+            _stopService = stopService;
         }
 
         public async Task HandleMessageAsync(Message message, CancellationToken ct)
@@ -40,9 +41,9 @@ namespace MultitoolBot
             {
                 "/start" => _botClient.SendMessage(message.Chat.Id, "Привет! Я бот-мультитул...", cancellationToken: ct),
                 "/help" => _botClient.SendMessage(message.Chat.Id, "Просто отправь название остановки...", cancellationToken: ct),
-                "/favs" => ShowFavsAsync(message.Chat.Id, ct),
-                "/addfav" => ShowStopsAsync(text, "choose", message.Chat.Id, ct),
-                _ => ShowStopsAsync(text,"stop" ,message.Chat.Id, ct)
+                "/favs" => _botClient.SendMessage(message.Chat.Id, "В разработке", cancellationToken: ct),
+                "/addfav" => _botClient.SendMessage(message.Chat.Id, "В разработке", cancellationToken: ct),
+                _ => ShowStopsAsync(text, "stop", message.Chat.Id, ct)
             };
 
             await task;
@@ -73,15 +74,27 @@ namespace MultitoolBot
 
                     await _botClient.AnswerCallbackQuery(callbackQuery.Id, $"Загружаю расписание...", cancellationToken: ct);
 
-                    ArrivalResponse arrivalData = await _client.GetArrivalTimesByStops(stopId, ct);
+                    ArrivalResponse arrivalData = await _stopService.GetArrivalTimesByStops(stopId, ct);
 
                     string replyText = _stopBot.FormatArrivalMessage(arrivalData, stopName);
 
-                    await _botClient.SendMessage(
+                    if (callbackQuery.InlineMessageId != null)
+                    {
+                        await _botClient.EditMessageText(
+                            inlineMessageId: callbackQuery.InlineMessageId,
+                            text: replyText,
+                            parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                            cancellationToken: ct
+                        );
+                    }
+                    else if (callbackQuery.Message != null)
+                    {
+                        await _botClient.SendMessage(
                         chatId: callbackQuery.Message.Chat.Id,
                         text: replyText,
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                         cancellationToken: ct);
+                    }
                 }
             }
             //else if (data.StartsWith("choose:")) // пока не реализовано
@@ -111,7 +124,34 @@ namespace MultitoolBot
             //}
         }
 
-        private async Task ShowStopsAsync(string text, string reason , long chatId, CancellationToken ct) 
+        public async Task HandleInlineQueryAsync(InlineQuery query, CancellationToken ct)
+        {
+            var stopName = query.Query;
+            var stopPlaces = _stopBot.SearchStops(stopName);
+            var results = stopPlaces.Select(s =>
+                {
+                    var messageContent = new InputTextMessageContent($"Расписание для: {s.Name}");
+                    var cleanNote = _stopBot.EditNamesStops(s.Note, s.Name);
+                    return new InlineQueryResultArticle()
+                    {
+
+                        Id = $"inline_stop:{s.Id}",
+                        Title = $"{s.Name} ({cleanNote})",
+                        InputMessageContent = messageContent,
+                        ReplyMarkup = new InlineKeyboardMarkup(
+                                        InlineKeyboardButton.WithCallbackData("Узнать время прибытия", $"stop:{s.Id}"))
+                    };
+                }
+                );
+            await _botClient.AnswerInlineQuery(
+                inlineQueryId: query.Id,
+                results: results,
+                
+                cacheTime:60,
+                cancellationToken:ct);
+        }
+
+        private async Task ShowStopsAsync(string text, string reason, long chatId, CancellationToken ct)
         {
             var stopPlaces = _stopBot.SearchStops(text);
 
@@ -121,7 +161,7 @@ namespace MultitoolBot
                 return;
             }
 
-            var buttons = stopPlaces.Select(stop =>                                                                     
+            var buttons = stopPlaces.Select(stop =>
             {
                 string cleanNote = stop.Note ?? "";
                 cleanNote = _stopBot.EditNamesStops(cleanNote, stop.Name);
@@ -146,7 +186,7 @@ namespace MultitoolBot
             );
         }
 
-        private async Task ShowFavsAsync(long chatId, CancellationToken ct) 
+        private async Task ShowFavsAsync(long chatId, CancellationToken ct)
         {
             var favoritStops = await GetFavsAsync(chatId, ct);
 

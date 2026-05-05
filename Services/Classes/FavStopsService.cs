@@ -3,6 +3,7 @@ using AutoMapper;
 using Domain.Entities;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using PermGorTrans.ApiClient;
 using Services.Interfaces;
 using System.Data;
 

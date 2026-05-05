@@ -4,9 +4,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Multitoolbot;
 using Multitoolbot.Cache;
 using Multitoolbot.Handlers;
+using Multitoolbot.Logic;
+using MultitoolBot;
 using PermGorTrans.ApiClient;
 using Serilog;
 using Serilog.Events;
@@ -63,7 +64,9 @@ try
 
     builder.Services.AddScoped<IStopLogic, StopLogic>();
 
-    builder.Services.AddScoped<MultitoolBot.MultiToolBot>();
+    builder.Services.AddScoped<IStopService, StopService>();
+
+    builder.Services.AddScoped<MultiToolBot>();
 
     builder.Services.AddScoped<ExceptionHandler>();
 

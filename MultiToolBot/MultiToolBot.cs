@@ -1,6 +1,7 @@
 ﻿using Application.Dto;
 using FuzzySharp;
 using Multitoolbot.Cache;
+using Multitoolbot.Constants;
 using Multitoolbot.Logic;
 using PermGorTrans.ApiClient;
 using PermGorTrans.ApiClient.Models;
@@ -39,10 +40,10 @@ namespace MultitoolBot
 
             var task = text switch
             {
-                "/start" => _botClient.SendMessage(message.Chat.Id, "Привет! Я бот-мультитул...", cancellationToken: ct),
-                "/help" => _botClient.SendMessage(message.Chat.Id, "Просто отправь название остановки...", cancellationToken: ct),
-                "/favs" => _botClient.SendMessage(message.Chat.Id, "В разработке", cancellationToken: ct),
-                "/addfav" => _botClient.SendMessage(message.Chat.Id, "В разработке", cancellationToken: ct),
+                BotCommands.Start => _botClient.SendMessage(message.Chat.Id, "Привет! Я бот-мультитул...", cancellationToken: ct),
+                BotCommands.Help => _botClient.SendMessage(message.Chat.Id, "Просто отправь название остановки...", cancellationToken: ct),
+                BotCommands.Favs => _botClient.SendMessage(message.Chat.Id, "В разработке", cancellationToken: ct),
+                BotCommands.AddFav => _botClient.SendMessage(message.Chat.Id, "В разработке", cancellationToken: ct),
                 _ => ShowStopsAsync(text, "stop", message.Chat.Id, ct)
             };
 
@@ -53,7 +54,7 @@ namespace MultitoolBot
         {
             var data = callbackQuery.Data;
 
-            if (data.StartsWith("stop:"))
+            if (data.StartsWith(CallbackData.Stop))
             {
                 var idString = data.Replace("stop:", "");
 

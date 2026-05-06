@@ -12,8 +12,6 @@ namespace Multitoolbot.Cache
     {
         private List<ExtStopPlace> _stopPlaces = new ();
 
-        
-
         private bool _isInitialized;
 
         private readonly ILogger<StopPlaceCache> _logger;

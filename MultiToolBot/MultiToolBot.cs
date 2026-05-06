@@ -137,7 +137,8 @@ namespace MultitoolBot
                     {
 
                         Id = $"inline_stop:{s.Id}",
-                        Title = $"{s.Name} ({cleanNote})",
+                        Title = $"{s.Name}",
+                        Description = cleanNote,
                         InputMessageContent = messageContent,
                         ReplyMarkup = new InlineKeyboardMarkup(
                                         InlineKeyboardButton.WithCallbackData("Узнать время прибытия", $"stop:{s.Id}"))

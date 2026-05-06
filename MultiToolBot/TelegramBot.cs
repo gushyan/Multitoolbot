@@ -14,15 +14,16 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace MultitoolBot
 {
-    public class MultiToolBot
+    public class TelegramBot
     {
         private readonly ITelegramBotClient _botClient;
         private readonly IStopPlaceCache _cache;
         private readonly IFavStopsService _stopsService;
-        private readonly IStopLogic _stopBot;
+        private readonly IStopsLogic _stopBot;
         private readonly IStopService _stopService;
+        private readonly IReadOnlyList<ExtStopPlace> _stops;
 
-        public MultiToolBot(ITelegramBotClient botClient, IStopPlaceCache cache, IFavStopsService stopsService, IStopLogic stopBot, IStopService stopService)
+        public TelegramBot(ITelegramBotClient botClient, IStopPlaceCache cache, IFavStopsService stopsService, IStopsLogic stopBot, IStopService stopService)
         {
             _botClient = botClient;
             _cache = cache;
@@ -60,7 +61,7 @@ namespace MultitoolBot
 
                 if (int.TryParse(idString, out int stopId)) // дублирование со строкой 87
                 {
-                    var stop = _cache.Stops.FirstOrDefault(s => s.Id == stopId);
+                    var stop =_cache.Stops.FirstOrDefault(s => s.Id == stopId);
                     if (stop == null)
                     {
                         await _botClient.AnswerCallbackQuery(

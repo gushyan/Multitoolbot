@@ -43,7 +43,7 @@ public class TelegramUpdateHandler : BackgroundService
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken ct)
     {
         using var scope = _scopeFactory.CreateScope();
-        var controller = scope.ServiceProvider.GetRequiredService<MultiToolBot>();
+        var controller = scope.ServiceProvider.GetRequiredService<TelegramBot>();
         var exceptionHandler = scope.ServiceProvider.GetRequiredService<ExceptionHandler>();
 
         try

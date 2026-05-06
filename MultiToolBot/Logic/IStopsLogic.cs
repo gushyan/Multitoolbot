@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Multitoolbot.Logic
 {
-    public interface IStopLogic
+    public interface IStopsLogic
     {
         public List<ExtStopPlace> SearchStops(string text);
 

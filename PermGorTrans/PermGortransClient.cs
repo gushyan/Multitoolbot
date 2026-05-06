@@ -23,7 +23,7 @@ namespace PermGorTrans.ApiClient
 
         public async Task<ArrivalResponse> GetArrivalTimesByStops(int id, CancellationToken ct) 
         {
-            return await _httpClient.GetFromJsonAsync<ArrivalResponse>($"arrival-times-vehicles/{id}", ct);
+            return await _httpClient.GetFromJsonAsync<ArrivalResponse>($"arrival-times-vehicles/{id}", ct) ?? new();
         }
     }
 }

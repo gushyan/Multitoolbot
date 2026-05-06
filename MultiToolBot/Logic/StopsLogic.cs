@@ -6,11 +6,11 @@ using System.Text;
 
 namespace Multitoolbot.Logic
 {
-    public class StopLogic : IStopLogic
+    public class StopsLogic : IStopsLogic
     {
         private readonly IStopPlaceCache _cache;
 
-        public StopLogic(IStopPlaceCache cache)
+        public StopsLogic(IStopPlaceCache cache)
         {
             _cache = cache;
         }

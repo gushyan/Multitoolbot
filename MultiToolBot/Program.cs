@@ -62,11 +62,11 @@ try
 
     builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botToken));
 
-    builder.Services.AddScoped<IStopLogic, StopLogic>();
+    builder.Services.AddScoped<IStopsLogic, StopsLogic>();
 
     builder.Services.AddScoped<IStopService, StopService>();
 
-    builder.Services.AddScoped<MultiToolBot>();
+    builder.Services.AddScoped<TelegramBot>();
 
     builder.Services.AddScoped<ExceptionHandler>();
 

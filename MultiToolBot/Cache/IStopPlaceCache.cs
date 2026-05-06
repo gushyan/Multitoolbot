@@ -5,7 +5,7 @@ namespace Multitoolbot.Cache
 {
     public interface IStopPlaceCache
     {
-        public IReadOnlyList<ExtStopPlace> Stops { get; }
+        IReadOnlyList<ExtStopPlace> Stops { get; }
 
         Task InitializeAsync(CancellationToken ct);
     }

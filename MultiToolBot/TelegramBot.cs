@@ -21,7 +21,6 @@ namespace MultitoolBot
         private readonly IFavStopsService _stopsService;
         private readonly IStopsLogic _stopBot;
         private readonly IStopService _stopService;
-        private readonly IReadOnlyList<ExtStopPlace> _stops;
 
         public TelegramBot(ITelegramBotClient botClient, IStopPlaceCache cache, IFavStopsService stopsService, IStopsLogic stopBot, IStopService stopService)
         {
@@ -34,6 +33,8 @@ namespace MultitoolBot
 
         public async Task HandleMessageAsync(Message message, CancellationToken ct)
         {
+            await _cache.InitializeAsync(ct);
+
             var text = message.Text;
             if (string.IsNullOrEmpty(text)) return;
 
@@ -53,6 +54,7 @@ namespace MultitoolBot
 
         public async Task HandleCallbackAsync(CallbackQuery callbackQuery, CancellationToken ct)
         {
+            await _cache.InitializeAsync(ct);
             var data = callbackQuery.Data;
 
             if (data.StartsWith(CallbackData.Stop))
@@ -128,6 +130,8 @@ namespace MultitoolBot
 
         public async Task HandleInlineQueryAsync(InlineQuery query, CancellationToken ct)
         {
+            await _cache.InitializeAsync(ct);
+
             var stopName = query.Query;
             var stopPlaces = _stopBot.SearchStops(stopName);
             var results = stopPlaces.Select(s =>

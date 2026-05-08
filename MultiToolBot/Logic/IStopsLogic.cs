@@ -9,8 +9,8 @@ namespace Multitoolbot.Logic
     {
         public List<ExtStopPlace> SearchStops(string text);
 
-        public string EditNamesStops(string cleanNote, string stopName);
+        public List<IGrouping<string, ExtStopPlace>> SearchGroupStops(string text);
 
-        public string FormatArrivalMessage(ArrivalResponse response, string stopName);
+        public string FormatArrivalMessage(ArrivalResponse response, string stopName, string note);
     }
 }

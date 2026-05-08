@@ -37,7 +37,7 @@ public class TelegramUpdateHandler : BackgroundService
             cancellationToken: stoppingToken
         );
 
-        await Task.Delay(Timeout.Infinite, stoppingToken);
+            await Task.Delay(Timeout.Infinite, stoppingToken);
     }
 
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken ct)

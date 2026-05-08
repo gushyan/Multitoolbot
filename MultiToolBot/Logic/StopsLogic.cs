@@ -26,24 +26,14 @@ namespace Multitoolbot.Logic
                 .Take(10)
                 .ToList();
         }
-
-        public string EditNamesStops(string cleanNote, string stopName)
+        public List<IGrouping<string, ExtStopPlace>> SearchGroupStops(string text)
         {
-            if (!string.IsNullOrEmpty(cleanNote))
-            {
-                if (cleanNote.Contains(stopName, StringComparison.OrdinalIgnoreCase))
-                    cleanNote = cleanNote.Replace(stopName, "", StringComparison.OrdinalIgnoreCase)
-                                         .Replace("по ", "", StringComparison.OrdinalIgnoreCase)
-                                         .Trim(' ', ',', '(', ')');
+            var stops = SearchStops(text);
 
-                cleanNote = cleanNote.Replace("в город", "➡️ в город")
-                                 .Replace("из города", "⬅️ из города");
-            }
-
-            return cleanNote;
+            return stops.GroupBy(s => s.Name.Replace(". ", "."),StringComparer.OrdinalIgnoreCase).ToList();
         }
 
-        public string FormatArrivalMessage(ArrivalResponse response, string stopName)
+        public string FormatArrivalMessage(ArrivalResponse response, string stopName, string note)
         {
             if (response?.RouteTypes == null || response.RouteTypes.Count == 0)
             {
@@ -51,7 +41,8 @@ namespace Multitoolbot.Logic
             }
 
             var sb = new StringBuilder();
-            sb.AppendLine($" *Остановка*: {stopName}\n");
+            sb.AppendLine($" *Остановка*: {stopName}\n"
+                + $"*Направление:* {note}\n");
 
             foreach (var type in response.RouteTypes)
             {

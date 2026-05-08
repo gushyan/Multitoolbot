@@ -9,5 +9,7 @@ namespace Multitoolbot.Constants
         public const string Stop = "stop:";
 
         public const string Choose = "choose:";
+
+        public const string Route ="route:";
     }
 }

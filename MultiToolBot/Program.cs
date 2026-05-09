@@ -32,6 +32,7 @@ try
 {
     Log.Information("Запуск приложения...");
     var builder = Host.CreateApplicationBuilder(args);
+    builder.Configuration.AddJsonFile("appsettings.json", true,true);
 
     builder.Services.AddSerilog();
 
@@ -40,6 +41,9 @@ try
 
     var botToken = builder.Configuration["BotSettings:Token"]
         ?? throw new InvalidOperationException("Bot Token not found in configuration.");
+
+    var defaultUrl = builder.Configuration["GortransPerm:DefaultUrl"]
+        ?? throw new InvalidOperationException("DefaultUrl not found in configuration."); ;
 
     builder.Services.AddDbContext<BusDbContext>(options =>
         options.UseNpgsql(connectionString));
@@ -56,13 +60,14 @@ try
     {
         client.Timeout = TimeSpan.FromSeconds(10); // 
         client.DefaultRequestHeaders.Add("User-Agent", "MultitoolBot/1.0");
+        client.BaseAddress = new Uri(defaultUrl);
     });
 
     builder.Services.AddSingleton<IStopPlaceCache, StopPlaceCache>();
 
     builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botToken));
 
-    builder.Services.AddScoped<IStopsLogic, StopsLogic>();
+    builder.Services.AddScoped<IStopsTelegramFormatter, StopsTelegramFormatter>();
 
     builder.Services.AddScoped<IStopService, StopService>();
 

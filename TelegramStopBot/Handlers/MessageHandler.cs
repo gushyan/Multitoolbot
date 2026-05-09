@@ -1,4 +1,4 @@
-﻿using Domain.Constants;
+﻿using Application.Constants;
 using Services.Cache;
 using Services.Interfaces;
 using Telegram.Bot;

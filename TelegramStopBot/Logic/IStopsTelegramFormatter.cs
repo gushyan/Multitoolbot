@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TelegramStopBot.Logic
 {
-    public interface IStopsLogic
+    public interface IStopsTelegramFormatter
     {
         public string FormatArrivalMessage(ArrivalResponse response, string stopName, string note);
     }

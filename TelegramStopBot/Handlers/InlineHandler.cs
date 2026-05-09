@@ -1,5 +1,4 @@
-﻿using Domain.Constants;
-using Services.Classes;
+﻿using Application.Constants;
 using Services.Interfaces;
 using Telegram.Bot;
 using Telegram.Bot.Types;

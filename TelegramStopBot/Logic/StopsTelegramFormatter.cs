@@ -6,15 +6,8 @@ using System.Text;
 
 namespace TelegramStopBot.Logic
 {
-    public class StopsLogic : IStopsLogic
+    public class StopsTelegramFormatter : IStopsTelegramFormatter
     {
-        private readonly IStopPlaceCache _cache;
-
-        public StopsLogic(IStopPlaceCache cache)
-        {
-            _cache = cache;
-        }
-
         public string FormatArrivalMessage(ArrivalResponse response, string stopName, string note)
         {
             if (response?.RouteTypes == null || response.RouteTypes.Count == 0)

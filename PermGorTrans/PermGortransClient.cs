@@ -13,7 +13,6 @@ namespace PermGorTrans.ApiClient
         public PermGortransClient(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _httpClient.BaseAddress = new Uri("https://map.gortransperm.ru/json/");
         }
 
         public async Task<List<ExtStopPlace>> GetAllStopsAsync(CancellationToken ct)

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Domain.Constants
+namespace Application.Constants
 {
     public static class CallbackData
     {

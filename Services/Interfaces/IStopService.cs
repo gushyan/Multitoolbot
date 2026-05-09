@@ -9,5 +9,9 @@ namespace Services.Interfaces
     {
         public Task<ArrivalResponse> GetArrivalTimesByStops(int stopId, CancellationToken ct);
 
+        public List<ExtStopPlace> SearchStops(string text);
+
+        public List<IGrouping<string, ExtStopPlace>> SearchGroupStops(string text);
+
     }
 }

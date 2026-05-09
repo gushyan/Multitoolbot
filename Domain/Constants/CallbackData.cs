@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Multitoolbot.Constants
+namespace Domain.Constants
 {
     public static class CallbackData
     {

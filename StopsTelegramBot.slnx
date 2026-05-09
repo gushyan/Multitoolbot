@@ -2,7 +2,8 @@
   <Project Path="Application/Application.csproj" />
   <Project Path="Domain/Domain.csproj" />
   <Project Path="Infrastructure/Infrastructure.csproj" />
-  <Project Path="Multitoolbot/StopsTelegramBot.csproj" Id="d9f259a2-7342-44d4-bf8b-08a506ece524" />
+  <Project Path="Multitoolbot/ProjectHost.csproj" Id="d9f259a2-7342-44d4-bf8b-08a506ece524" />
   <Project Path="PermGorTrans/PermGorTrans.ApiClient.csproj" Id="f4f3a915-006c-41e3-9643-f9a98300bfe3" />
   <Project Path="Services/Services.csproj" />
+  <Project Path="TelegramStopBot/TelegramStopBot.csproj" Id="92f3ea03-7281-42ca-8173-46b3c76412bf" />
 </Solution>

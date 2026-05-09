@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Telegram.Bot" Version="22.9.6.2" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.7" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Domain\Domain.csproj" />
+	  <ProjectReference Include="..\PermGorTrans\PermGorTrans.ApiClient.csproj" />
+	  <ProjectReference Include="..\Services\Services.csproj" />
+	</ItemGroup>
+
+</Project>

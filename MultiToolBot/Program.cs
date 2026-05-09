@@ -5,15 +5,15 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Services.Cache;
-using Multitoolbot.Handlers;
-using Multitoolbot.Logic;
-using MultitoolBot;
+using ProjectHost.Handlers;
+using TelegramStopBot.Logic;
 using PermGorTrans.ApiClient;
 using Serilog;
 using Serilog.Events;
 using Services.Classes;
 using Services.Interfaces;
 using Telegram.Bot;
+using TelegramStopBot.Handlers;
 
 
 Log.Logger = new LoggerConfiguration()
@@ -66,7 +66,11 @@ try
 
     builder.Services.AddScoped<IStopService, StopService>();
 
-    builder.Services.AddScoped<TelegramBot>();
+    builder.Services.AddScoped<CallbackHandler>();
+
+    builder.Services.AddScoped<MessageHandler>();
+
+    builder.Services.AddScoped<InlineHandler>();
 
     builder.Services.AddScoped<ExceptionHandler>();
 

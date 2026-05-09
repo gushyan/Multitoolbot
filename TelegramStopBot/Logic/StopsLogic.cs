@@ -4,7 +4,7 @@ using PermGorTrans.ApiClient;
 using PermGorTrans.ApiClient.Models;
 using System.Text;
 
-namespace Multitoolbot.Logic
+namespace TelegramStopBot.Logic
 {
     public class StopsLogic : IStopsLogic
     {
@@ -13,24 +13,6 @@ namespace Multitoolbot.Logic
         public StopsLogic(IStopPlaceCache cache)
         {
             _cache = cache;
-        }
-
-        public List<ExtStopPlace> SearchStops(string text)
-        {
-            var term = text.ToLower();
-            return _cache.Stops
-                .Select(stop => new { Stop = stop, Score = Fuzz.PartialRatio(term, stop.Name.ToLower()) })
-                .Where(x => x.Score > 75)
-                .OrderByDescending(x => x.Score)
-                .Select(x => x.Stop)
-                .Take(10)
-                .ToList();
-        }
-        public List<IGrouping<string, ExtStopPlace>> SearchGroupStops(string text)
-        {
-            var stops = SearchStops(text);
-
-            return stops.GroupBy(s => s.Name.Replace(". ", "."),StringComparer.OrdinalIgnoreCase).ToList();
         }
 
         public string FormatArrivalMessage(ArrivalResponse response, string stopName, string note)

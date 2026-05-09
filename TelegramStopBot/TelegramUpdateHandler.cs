@@ -2,11 +2,10 @@
 using Microsoft.Extensions.Hosting;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using MultitoolBot;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Polling;
-using Multitoolbot.Handlers;
 using Telegram.Bot.Types.InlineQueryResults;
+using TelegramStopBot.Handlers;
 
 public class TelegramUpdateHandler : BackgroundService
 {
@@ -43,28 +42,29 @@ public class TelegramUpdateHandler : BackgroundService
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken ct)
     {
         using var scope = _scopeFactory.CreateScope();
-        var controller = scope.ServiceProvider.GetRequiredService<TelegramBot>();
-        var exceptionHandler = scope.ServiceProvider.GetRequiredService<ExceptionHandler>();
-
+        scope.ServiceProvider.GetRequiredService<CallbackHandler>();
         try
         {
             _logger.LogDebug("Определение типа обращения пользователя");
             if (update.Message is { } message)
             {
-                await controller.HandleMessageAsync(message, ct);
+                var messageHandler = scope.ServiceProvider.GetRequiredService<MessageHandler>();
+                await messageHandler.HandleMessageAsync(message, ct);
             }
             else if (update.CallbackQuery is { } callbackQuery)
             {
-                await controller.HandleCallbackAsync(callbackQuery, ct);
+                var callbackHandler = scope.ServiceProvider.GetRequiredService<CallbackHandler>();
+                await callbackHandler.HandleCallbackAsync(callbackQuery, ct);
             }
             else if (update.InlineQuery is { } inlineQuery)
             {
-                await controller.HandleInlineQueryAsync(inlineQuery, ct);
+                var inlineHandler = scope.ServiceProvider.GetRequiredService<InlineHandler>();
+                await inlineHandler.HandleInlineQueryAsync(inlineQuery, ct);
             }
         }
         catch (Exception ex)
         {
-            await exceptionHandler.HandleAsync(ex, update, ct);
+            //await exceptionHandler.HandleAsync(ex, update, ct);
         }
     }
 

@@ -2,7 +2,7 @@
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
-namespace Multitoolbot.Handlers
+namespace ProjectHost.Handlers
 {
     public class ExceptionHandler
     {

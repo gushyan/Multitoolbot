@@ -1,7 +1,7 @@
 ﻿using Domain.Entities;
 using PermGorTrans.ApiClient.Models;
 
-namespace Multitoolbot.Cache
+namespace Services.Cache
 {
     public interface IStopPlaceCache
     {

@@ -2,7 +2,7 @@
 using PermGorTrans.ApiClient;
 using PermGorTrans.ApiClient.Models;
 
-namespace Multitoolbot.Cache
+namespace Services.Cache
 {
     public class StopPlaceCache : IStopPlaceCache
     {

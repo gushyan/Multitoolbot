@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types.InlineQueryResults;
 using TelegramStopBot.Handlers;
-
 public class TelegramUpdateHandler : BackgroundService
 {
     private readonly ITelegramBotClient _botClient;
@@ -42,7 +41,8 @@ public class TelegramUpdateHandler : BackgroundService
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken ct)
     {
         using var scope = _scopeFactory.CreateScope();
-        scope.ServiceProvider.GetRequiredService<CallbackHandler>();
+        var exceptionHandler = scope.ServiceProvider.GetRequiredService<ExceptionHandler>();
+
         try
         {
             _logger.LogDebug("Определение типа обращения пользователя");
@@ -64,7 +64,7 @@ public class TelegramUpdateHandler : BackgroundService
         }
         catch (Exception ex)
         {
-            //await exceptionHandler.HandleAsync(ex, update, ct);
+            await exceptionHandler.HandleAsync(ex, update, ct);
         }
     }
 

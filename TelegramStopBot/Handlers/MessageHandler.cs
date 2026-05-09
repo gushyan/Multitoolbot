@@ -5,65 +5,64 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace TelegramStopBot.Handlers
+namespace TelegramStopBot.Handlers;
+
+public class MessageHandler
 {
-    public class MessageHandler
+    private readonly ITelegramBotClient _botClient;
+    private readonly IStopService _stopService;
+
+    public MessageHandler(ITelegramBotClient botClient, IStopService stopService) 
     {
-        private readonly ITelegramBotClient _botClient;
-        private readonly IStopService _stopService;
+        _botClient = botClient;
+        _stopService = stopService;
+    }
 
-        public MessageHandler(ITelegramBotClient botClient, IStopService stopService) 
+    public async Task HandleMessageAsync(Message message, CancellationToken ct)
+    {
+        var text = message.Text;
+        if (string.IsNullOrEmpty(text)) return;
+
+        var chatId = message.Chat.Id;
+
+        var task = text switch
         {
-            _botClient = botClient;
-            _stopService = stopService;
+            BotCommands.Start => _botClient.SendMessage(message.Chat.Id, "Привет! Я бот, который показывает время прибытия автобусов на любой остановке.\r\n" +
+            "Просто отправь мне название (например, ЦУМ), и я пришлю расписание!\r\n" +
+            "Кстати, у меня открытый исходный код: https://github.com/gushyan/StopsBot", cancellationToken: ct),
+            BotCommands.Help => _botClient.SendMessage(message.Chat.Id, "Отправь название остановки и выбери нужную из списка." +
+            "Напиши моё имя и название остановки.\r\n" +
+            " Например: @твое_имя_бота ЦУМ\r\n" +
+            "Выбери остановку из всплывающего списка, и расписание отправится прямо в текущий чат!", cancellationToken: ct),
+            BotCommands.Favs => _botClient.SendMessage(message.Chat.Id, "В разработке", cancellationToken: ct),
+            BotCommands.AddFav => _botClient.SendMessage(message.Chat.Id, "В разработке", cancellationToken: ct),
+            _ => ShowStopsAsync(text, CallbackData.Stop, message.Chat.Id, ct)
+        };
+
+        await task;
+    }
+
+    private async Task ShowStopsAsync(string text, string reason, long chatId, CancellationToken ct)
+    {
+        var groupedStops = _stopService.SearchGroupStops(text);
+
+        if (groupedStops.Count == 0)
+        {
+            await _botClient.SendMessage(chatId, "В базе пока нет такой остановки.", cancellationToken: ct);
+            return;
         }
 
-        public async Task HandleMessageAsync(Message message, CancellationToken ct)
-        {
-            var text = message.Text;
-            if (string.IsNullOrEmpty(text)) return;
+        var buttons = groupedStops.Select(group => InlineKeyboardButton.WithCallbackData(
+                text: group.Key,
+                callbackData: $"{reason}{group.First().Id}"));
 
-            var chatId = message.Chat.Id;
+        var inlineKeyboard = new InlineKeyboardMarkup(buttons.Chunk(1));
 
-            var task = text switch
-            {
-                BotCommands.Start => _botClient.SendMessage(message.Chat.Id, "Привет! Я бот, который показывает время прибытия автобусов на любой остановке.\r\n" +
-                "Просто отправь мне название (например, ЦУМ), и я пришлю расписание!\r\n" +
-                "Кстати, у меня открытый исходный код: https://github.com/gushyan/StopsBot", cancellationToken: ct),
-                BotCommands.Help => _botClient.SendMessage(message.Chat.Id, "Отправь название остановки и выбери нужную из списка." +
-                "Напиши моё имя и название остановки.\r\n" +
-                " Например: @твое_имя_бота ЦУМ\r\n" +
-                "Выбери остановку из всплывающего списка, и расписание отправится прямо в текущий чат!", cancellationToken: ct),
-                BotCommands.Favs => _botClient.SendMessage(message.Chat.Id, "В разработке", cancellationToken: ct),
-                BotCommands.AddFav => _botClient.SendMessage(message.Chat.Id, "В разработке", cancellationToken: ct),
-                _ => ShowStopsAsync(text, CallbackData.Stop, message.Chat.Id, ct)
-            };
-
-            await task;
-        }
-
-        private async Task ShowStopsAsync(string text, string reason, long chatId, CancellationToken ct)
-        {
-            var groupedStops = _stopService.SearchGroupStops(text);
-
-            if (groupedStops.Count == 0)
-            {
-                await _botClient.SendMessage(chatId, "В базе пока нет такой остановки.", cancellationToken: ct);
-                return;
-            }
-
-            var buttons = groupedStops.Select(group => InlineKeyboardButton.WithCallbackData(
-                    text: group.Key,
-                    callbackData: $"{reason}{group.First().Id}"));
-
-            var inlineKeyboard = new InlineKeyboardMarkup(buttons.Chunk(1));
-
-            await _botClient.SendMessage(
-                chatId: chatId,
-                text: "Выберите остановку из списка ниже:",
-                replyMarkup: inlineKeyboard,
-                cancellationToken: ct
-            );
-        }
+        await _botClient.SendMessage(
+            chatId: chatId,
+            text: "Выберите остановку из списка ниже:",
+            replyMarkup: inlineKeyboard,
+            cancellationToken: ct
+        );
     }
 }

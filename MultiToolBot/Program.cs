@@ -5,7 +5,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Services.Cache;
-using ProjectHost.Handlers;
 using TelegramStopBot.Logic;
 using PermGorTrans.ApiClient;
 using Serilog;

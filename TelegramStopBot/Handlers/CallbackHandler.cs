@@ -12,14 +12,12 @@ namespace TelegramStopBot.Handlers;
 public class CallbackHandler
 {
     private readonly ITelegramBotClient _botClient;
-    private readonly IStopPlaceCache _cache;
     private readonly IStopsTelegramFormatter _stopsTelegramFormatter;
     private readonly IStopService _stopService;
 
-    public CallbackHandler(ITelegramBotClient botClient, IStopPlaceCache cache, IStopsTelegramFormatter stopsTelegramFormatter, IStopService stopService)
+    public CallbackHandler(ITelegramBotClient botClient, IStopsTelegramFormatter stopsTelegramFormatter, IStopService stopService)
     {
         _botClient = botClient;
-        _cache = cache;
         _stopsTelegramFormatter = stopsTelegramFormatter;
         _stopService = stopService;
     }
@@ -28,12 +26,12 @@ public class CallbackHandler
     public async Task HandleCallbackAsync(CallbackQuery callbackQuery, CancellationToken ct)
     {
 
-        if (callbackQuery.Data.StartsWith(CallbackData.Stop) && callbackQuery.Message != null)
+        if (callbackQuery.Data?.StartsWith(CallbackData.Stop) == true && callbackQuery.Message != null)
         {
             await HandleShowRoutesRequestAsync(callbackQuery, ct);
         }
 
-        if (callbackQuery.Data.StartsWith(CallbackData.Route))
+        if (callbackQuery.Data?.StartsWith(CallbackData.Route) == true)
         {
             await HandleShowArrivalTimesByStopsRequestAsync(callbackQuery, ct);
         }
@@ -42,11 +40,11 @@ public class CallbackHandler
     private async Task HandleShowRoutesRequestAsync(CallbackQuery callbackQuery, CancellationToken ct)
     {
         var data = callbackQuery.Data;
-        var idString = data.Replace(CallbackData.Stop, "");
+        var idString = data?.Replace(CallbackData.Stop, "");
 
         if (int.TryParse(idString, out int stopId))
         {
-            var choosedRoute = _cache.Stops.FirstOrDefault(s => s.Id == stopId);
+            var choosedRoute = (await _stopService.GetStops(ct)).FirstOrDefault(s => s.Id == stopId);
 
             if (choosedRoute == null)
             {
@@ -60,7 +58,7 @@ public class CallbackHandler
 
             string targetGroupName = choosedRoute.Name.Replace(". ", ".");
 
-            var routes = _cache.Stops
+            var routes = (await _stopService.GetStops(ct))
                     .Where(s => s.Name.Replace(". ", ".").Equals(targetGroupName, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
@@ -95,7 +93,7 @@ public class CallbackHandler
 
         if (int.TryParse(idString, out int stopId))
         {
-            var stop = _cache.Stops.FirstOrDefault(s => s.Id == stopId);
+            var stop = (await _stopService.GetStops(ct)).FirstOrDefault(s => s.Id == stopId);
             if (stop == null)
             {
                 await _botClient.AnswerCallbackQuery(
@@ -108,7 +106,7 @@ public class CallbackHandler
 
             await _botClient.AnswerCallbackQuery(callbackQuery.Id, $"Загружаю расписание...", cancellationToken: ct);
 
-            ArrivalResponse arrivalData = await _stopService.GetArrivalTimesByStops(stopId, ct);
+            ArrivalResponse arrivalData = await _stopService.GetArrivalTimesByStopsAsync(stopId, ct);
 
             string replyText = _stopsTelegramFormatter.FormatArrivalMessage(arrivalData, stop.Name, stop.Note);
 

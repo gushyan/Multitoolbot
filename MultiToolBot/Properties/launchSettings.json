@@ -1,10 +1,19 @@
 {
   "profiles": {
-    "MultitoolBot": {
+    "MultitoolBot.Development": {
       "commandName": "Project",
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"
       }
+    },
+    "MultitoolBot.Production": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Production"
+      }
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
     }
   }
 }

@@ -31,7 +31,6 @@ try
 {
     Log.Information("Запуск приложения...");
     var builder = Host.CreateApplicationBuilder(args);
-    builder.Configuration.AddJsonFile("appsettings.json", true,true);
 
     builder.Services.AddSerilog();
 
@@ -57,7 +56,7 @@ try
 
     builder.Services.AddHttpClient<IPermGortransClient, PermGortransClient>(client =>
     {
-        client.Timeout = TimeSpan.FromSeconds(10); // 
+        client.Timeout = TimeSpan.FromSeconds(25); 
         client.DefaultRequestHeaders.Add("User-Agent", "MultitoolBot/1.0");
         client.BaseAddress = new Uri(defaultUrl);
     });

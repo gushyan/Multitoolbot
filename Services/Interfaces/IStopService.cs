@@ -7,11 +7,13 @@ namespace Services.Interfaces
 {
     public interface IStopService
     {
-        public Task<ArrivalResponse> GetArrivalTimesByStops(int stopId, CancellationToken ct);
+        public Task<ArrivalResponse> GetArrivalTimesByStopsAsync(int stopId, CancellationToken ct);
 
-        public List<ExtStopPlace> SearchStops(string text);
+        public Task<List<ExtStopPlace>> SearchStopsAsync(string text, CancellationToken ct);
 
-        public List<IGrouping<string, ExtStopPlace>> SearchGroupStops(string text);
+        public Task<IReadOnlyList<ExtStopPlace>> GetStops(CancellationToken ct);
+
+        public Task<List<IGrouping<string, ExtStopPlace>>> SearchGroupStops(string text, CancellationToken ct);
 
     }
 }

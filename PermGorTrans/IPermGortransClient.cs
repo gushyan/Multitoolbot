@@ -9,7 +9,7 @@ namespace PermGorTrans.ApiClient
     {
         Task<List<ExtStopPlace>> GetAllStopsAsync(CancellationToken ct);
 
-        Task<ArrivalResponse> GetArrivalTimesByStops(int id, CancellationToken ct);
+        Task<ArrivalResponse> GetArrivalTimesByStopsAsync(int id, CancellationToken ct);
 
     }
 }

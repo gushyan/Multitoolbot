@@ -1,27 +1,63 @@
+version: "3.8"
+
 services:
   db:
     image: postgres:16-alpine
-    container_name: bus_postgres_db
     restart: always
-    
-    shm_size: 128mb
+
+    shm_size: 64mb
+
+    command: >
+      postgres 
+      -c shared_buffers=32MB
+      -c max_connections=20
+      -c work_mem=2MB
+      -c maintenance_work_mem=16MB
 
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+    mem_limit: 150m
+
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d bus_db"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 15s
       timeout: 5s
       retries: 5
+
+  mybot:
+    container_name: bus_bot
+    restart: always
+
+    build:
+      context: .
+      dockerfile: MultiToolBot/Dockerfile
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    environment:
+      DOTNET_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Host=db;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      BotSettings__Token: ${BOT_TOKEN}
+
+      DOTNET_gcServer: 0
+      DOTNET_GCHeapHardLimit: 150000000
+      DOTNET_GCHighMemPercent: 85
+
+    mem_limit: 200m
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
 
 volumes:
   postgres_data:

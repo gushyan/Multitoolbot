@@ -18,12 +18,14 @@ namespace Services.Classes
             _permgortransClient = permGortransClient;
             _cache = stopPlaceCache;
         }
-        public async Task<ArrivalResponse> GetArrivalTimesByStops(int stopId, CancellationToken ct)
+        public async Task<ArrivalResponse> GetArrivalTimesByStopsAsync(int stopId, CancellationToken ct)
         {
-            return await _permgortransClient.GetArrivalTimesByStops(stopId, ct);
+            return await _permgortransClient.GetArrivalTimesByStopsAsync(stopId, ct);
         }
-        public List<ExtStopPlace> SearchStops(string text)
+        public async Task<List<ExtStopPlace>> SearchStopsAsync(string text, CancellationToken ct)
         {
+            await _cache.InitializeAsync(ct);
+
             var term = text.ToLower();
             return _cache.Stops
                 .Select(stop => new { Stop = stop, Score = Fuzz.PartialRatio(term, stop.Name.ToLower()) })
@@ -33,11 +35,16 @@ namespace Services.Classes
                 .Take(10)
                 .ToList();
         }
-        public List<IGrouping<string, ExtStopPlace>> SearchGroupStops(string text)
+        public async Task<List<IGrouping<string, ExtStopPlace>>> SearchGroupStops(string text, CancellationToken ct)
         {
-            var stops = SearchStops(text);
-
+            var stops = await SearchStopsAsync(text, ct);
             return stops.GroupBy(s => s.Name.Replace(". ", "."), StringComparer.OrdinalIgnoreCase).ToList();
+        }
+
+        public async Task<IReadOnlyList<ExtStopPlace>> GetStops(CancellationToken ct)
+        {
+            await _cache.InitializeAsync(ct);
+            return _cache.Stops;
         }
     }
 

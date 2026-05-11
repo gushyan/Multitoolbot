@@ -51,9 +51,6 @@ try
         cfg.AddMaps(typeof(FavStopsProfile).Assembly);
     });
 
-    builder.Services.AddScoped<IFavStopsService, FavStopsService>();
-
-
     builder.Services.AddHttpClient<IPermGortransClient, PermGortransClient>(client =>
     {
         client.Timeout = TimeSpan.FromSeconds(25); 
@@ -68,6 +65,8 @@ try
     builder.Services.AddScoped<IStopsTelegramFormatter, StopsTelegramFormatter>();
 
     builder.Services.AddScoped<IStopService, StopService>();
+
+    builder.Services.AddScoped<IFavStopsService, FavStopsService>();
 
     builder.Services.AddScoped<CallbackHandler>();
 

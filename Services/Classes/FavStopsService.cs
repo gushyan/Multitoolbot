@@ -3,73 +3,54 @@ using AutoMapper;
 using Domain.Entities;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using PermGorTrans.ApiClient;
 using Services.Interfaces;
 using System.Data;
 
 namespace Services.Classes
 {
-    public class FavStopsService: IFavStopsService
+    public class FavStopsService : IFavStopsService
     {
         private readonly BusDbContext _dbcontext;
         private readonly IMapper _mapper;
 
         public FavStopsService(BusDbContext dbcontext, IMapper mapper)
         {
-            this._dbcontext = dbcontext;
-            this._mapper = mapper;
+            _dbcontext = dbcontext;
+            _mapper = mapper;
         }
 
         public async Task AddFavoriteStopsByChatIdAsync(FavStopsAddRequest addRequest, CancellationToken ct)
         {
-            var fav = await _dbcontext.FavStops.FirstOrDefaultAsync(f => f.ChatId == addRequest.chatId, ct);
+            if (await _dbcontext.FavStops.AnyAsync(f => f.ChatId == addRequest.ChatId && f.StopId == addRequest.StopId, ct))
+                throw new DuplicateNameException("Эта остановка уже в избранном");
 
-            if (fav != null)
-            {
-                if (fav.StopIds.Contains(addRequest.stopId))
-                    throw new DuplicateNameException("Такая остановка уже добавлена");
-
-                fav.StopIds.Add(addRequest.stopId);
-                _dbcontext.Entry(fav).Property(f => f.StopIds).IsModified = true;
-
-            }
-            else
-            {
-                FavStops favStops = new FavStops() 
-                {
-                    ChatId = addRequest.chatId,
-                    StopIds = new List<int> { addRequest.stopId }
-                    
-                };
-                _dbcontext.FavStops.Add(favStops);
-            }
-
+            _dbcontext.FavStops.Add(_mapper.Map<FavStops>(addRequest));
             await _dbcontext.SaveChangesAsync(ct);
         }
 
-        public async Task DeleteFavoriteStopsByChatIdAsync(FavStopsDeleteRequest deleteRequest, CancellationToken ct) 
+        public async Task DeleteFavoriteStopsByChatIdAsync(FavStopsDeleteRequest deleteRequest, CancellationToken ct)
         {
-            var fav = await _dbcontext.FavStops.FirstOrDefaultAsync(f => f.ChatId == deleteRequest.chatId, ct);
-            if (fav == null)
-                throw new KeyNotFoundException("У чата нет избранных остановок");
+            var countLines = await _dbcontext.FavStops.Where(f => f.ChatId == deleteRequest.ChatId && f.StopId == deleteRequest.StopId)
+                .ExecuteDeleteAsync(ct);
 
-            if (fav.StopIds.Contains(deleteRequest.stopId))
-                fav.StopIds.Remove(deleteRequest.stopId);
-
-            else 
-                throw new KeyNotFoundException("У чата нет избранных остановок");
-
-            _dbcontext.Entry(fav).Property(f => f.StopIds).IsModified = true;
-            await _dbcontext.SaveChangesAsync(ct);
+            if (countLines == 0)
+                throw new KeyNotFoundException("В избранном нет такой остановки");
         }
 
-        public async Task<FavStopsResponse> GetFavoriteStopsByChatIdAsync(long chatId, CancellationToken ct) 
+        public async Task<FavStopsResponse> GetFavoriteStopsByChatIdAsync(long chatId, CancellationToken ct)
         {
-            var fav = await _dbcontext.FavStops.FirstOrDefaultAsync(f => f.ChatId == chatId, ct);
-            if (fav == null || !fav.StopIds.Any())
-                throw new KeyNotFoundException("У чата нет избранных остановок");
+            var favStops = await _dbcontext.FavStops
+                .AsNoTracking()
+                .Where(f => f.ChatId == chatId)
+                .Select(f => f.StopId)
+                .ToListAsync(ct);
 
-            return _mapper.Map<FavStopsResponse>(fav);
+            return new FavStopsResponse(chatId, favStops);
+        }
+
+        public async Task<bool> CheckIsFavouriteStops(FavExistRequest favExistRequest, CancellationToken ct) 
+        {
+            return await _dbcontext.FavStops.AnyAsync(f => f.ChatId == favExistRequest.ChatId && f.StopId == favExistRequest.StopId );
         }
     }
 }

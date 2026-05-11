@@ -12,6 +12,7 @@ namespace Application.Profiles
         public FavStopsProfile() 
         {
             CreateMap<FavStopsResponse, FavStops>().ReverseMap();
+            CreateMap<FavStopsAddRequest, FavStops>().ReverseMap();
         }
     }
 }

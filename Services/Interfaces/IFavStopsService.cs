@@ -9,7 +9,12 @@ namespace Services.Interfaces
     public interface IFavStopsService
     {
         public Task AddFavoriteStopsByChatIdAsync(FavStopsAddRequest addRequest, CancellationToken ct);
+
         public Task DeleteFavoriteStopsByChatIdAsync(FavStopsDeleteRequest deleteRequest, CancellationToken ct);
+
         public Task<FavStopsResponse> GetFavoriteStopsByChatIdAsync(long chatId, CancellationToken ct);
+
+        public Task<bool> CheckIsFavouriteStops(FavExistRequest favExistRequest, CancellationToken ct);
+
     }
 }

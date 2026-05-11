@@ -4,6 +4,5 @@ using System.Text;
 
 namespace Application.Dto
 {
-    public record FavStopsResponse(long ChatId, List<int> StopIds);
-
+    public record FavExistRequest(long ChatId, int StopId);
 }

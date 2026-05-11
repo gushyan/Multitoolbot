@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using System.Data;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -23,6 +24,7 @@ public class ExceptionHandler
         message = ex switch
         {
             KeyNotFoundException => ex.Message,
+            DuplicateNameException => ex.Message,
             _ => "Произошла ошибка. Попробуйте позже."
         };
 

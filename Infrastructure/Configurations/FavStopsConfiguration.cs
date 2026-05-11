@@ -8,9 +8,13 @@ namespace Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<FavStops> builder)
         {
-            builder.HasKey(s => s.ChatId);
-            builder.Property(s => s.ChatId)
-                .ValueGeneratedNever();
+            builder.Property(f => f.StopId).HasColumnName("stop_id");
+            builder.Property(f => f.ChatId).HasColumnName("chat_id");
+
+            builder.ToTable("fav_stops");
+
+            builder.HasKey(f => new { f.ChatId, f.StopId });
+            
         }
     }
 }

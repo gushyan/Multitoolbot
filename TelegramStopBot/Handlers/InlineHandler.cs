@@ -24,7 +24,7 @@ public class InlineHandler
         if (string.IsNullOrWhiteSpace(stopName) || stopName.Length < 2)
             return;
 
-        var stopPlaces = _stopService.SearchStopsAsync(stopName);
+        var stopPlaces = await _stopService.SearchStopsAsync(stopName, ct);
         var results = stopPlaces.Select(s =>
         {
             var messageContent = new InputTextMessageContent($"Расписание для: {s.Name}")

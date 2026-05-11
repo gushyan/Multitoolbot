@@ -4,5 +4,5 @@ using System.Text;
 
 namespace Application.Dto
 {
-    public record FavStopsDeleteRequest(long chatId, int stopId);
+    public record FavStopsDeleteRequest(long ChatId, int StopId);
 }

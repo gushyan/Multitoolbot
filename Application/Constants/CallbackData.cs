@@ -10,6 +10,8 @@ namespace Application.Constants
 
         public const string Choose = "choose:";
 
-        public const string Route ="route:";
+        public const string Route = "route:";
+
+        public const string Fav = "fav:";
     }
 }

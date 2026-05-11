@@ -11,11 +11,13 @@ public class MessageHandler
 {
     private readonly ITelegramBotClient _botClient;
     private readonly IStopService _stopService;
+    private readonly IFavStopsService _favStopsService;
 
-    public MessageHandler(ITelegramBotClient botClient, IStopService stopService) 
+    public MessageHandler(ITelegramBotClient botClient, IStopService stopService, IFavStopsService favStopsService) 
     {
         _botClient = botClient;
         _stopService = stopService;
+        _favStopsService = favStopsService;
     }
 
     public async Task HandleMessageAsync(Message message, CancellationToken ct)
@@ -34,7 +36,7 @@ public class MessageHandler
             "Напиши моё имя и название остановки.\r\n" +
             " Например: @твое_имя_бота ЦУМ\r\n" +
             "Выбери остановку из всплывающего списка, и расписание отправится прямо в текущий чат!", cancellationToken: ct),
-            BotCommands.Favs => _botClient.SendMessage(message.Chat.Id, "В разработке", cancellationToken: ct),
+            BotCommands.Favs => ShowFavStopsAsync(message.Chat.Id, ct),
             BotCommands.AddFav => _botClient.SendMessage(message.Chat.Id, "В разработке", cancellationToken: ct),
             _ => ShowStopsAsync(text, CallbackData.Stop, message.Chat.Id, ct)
         };
@@ -44,7 +46,7 @@ public class MessageHandler
 
     private async Task ShowStopsAsync(string text, string reason, long chatId, CancellationToken ct)
     {
-        var groupedStops = _stopService.SearchGroupStops(text);
+        var groupedStops = await _stopService.SearchGroupStops(text, ct);
 
         if (groupedStops.Count == 0)
         {
@@ -64,5 +66,25 @@ public class MessageHandler
             replyMarkup: inlineKeyboard,
             cancellationToken: ct
         );
+    }
+
+    private async Task ShowFavStopsAsync(long chatId, CancellationToken ct) 
+    {
+        var favStops = await _favStopsService.GetFavoriteStopsByChatIdAsync(chatId, ct);
+        var allStops = await _stopService.GetStops(ct);
+
+        var stops = favStops.StopIds.Select(si => allStops.FirstOrDefault(s => s.Id == si)).ToList();
+
+        var buttons = stops.Select(stop => InlineKeyboardButton.WithCallbackData(
+                text: stop.Name,
+                callbackData: $"{CallbackData.Route}{stop.Id}"));
+
+        var inlineKeyboard = new InlineKeyboardMarkup(buttons.Chunk(1));
+
+        await _botClient.SendMessage(
+            chatId: chatId,
+            text: "Выберите остановку из списка ниже:",
+            replyMarkup: inlineKeyboard,
+            cancellationToken: ct);
     }
 }

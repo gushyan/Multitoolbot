@@ -1,5 +1,4 @@
 ﻿using Application.Constants;
-using Services.Cache;
 using Services.Interfaces;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -13,7 +12,7 @@ public class MessageHandler
     private readonly IStopService _stopService;
     private readonly IFavStopsService _favStopsService;
 
-    public MessageHandler(ITelegramBotClient botClient, IStopService stopService, IFavStopsService favStopsService) 
+    public MessageHandler(ITelegramBotClient botClient, IStopService stopService, IFavStopsService favStopsService)
     {
         _botClient = botClient;
         _stopService = stopService;
@@ -36,9 +35,9 @@ public class MessageHandler
             "Напиши моё имя и название остановки.\r\n" +
             " Например: @твое_имя_бота ЦУМ\r\n" +
             "Выбери остановку из всплывающего списка, и расписание отправится прямо в текущий чат!", cancellationToken: ct),
-            BotCommands.Favs => ShowFavStopsAsync(message.Chat.Id, ct),
-            BotCommands.AddFav => _botClient.SendMessage(message.Chat.Id, "В разработке", cancellationToken: ct),
-            _ => ShowStopsAsync(text, CallbackData.Stop, message.Chat.Id, ct)
+            BotCommands.Favs => ShowFavStopsAsync(message.Chat.Id, CallbackData.ShowArrivalTime, ct),
+            BotCommands.DeleteFav => ShowFavStopsAsync(message.Chat.Id, CallbackData.DeleteFav, ct),
+            _ => ShowStopsAsync(text, CallbackData.ShowArrivalTime, message.Chat.Id, ct)
         };
 
         await task;
@@ -54,9 +53,11 @@ public class MessageHandler
             return;
         }
 
-        var buttons = groupedStops.Select(group => InlineKeyboardButton.WithCallbackData(
-                text: group.Key,
-                callbackData: $"{reason}{group.First().Id}"));
+        var buttons = groupedStops
+            .Select(group =>
+                InlineKeyboardButton.WithCallbackData(
+                    text: group.Key,
+                    callbackData: $"{reason}{group.First().Id}"));
 
         var inlineKeyboard = new InlineKeyboardMarkup(buttons.Chunk(1));
 
@@ -68,22 +69,34 @@ public class MessageHandler
         );
     }
 
-    private async Task ShowFavStopsAsync(long chatId, CancellationToken ct) 
+    private async Task ShowFavStopsAsync(long chatId,string reason, CancellationToken ct)
     {
         var favStops = await _favStopsService.GetFavoriteStopsByChatIdAsync(chatId, ct);
         var allStops = await _stopService.GetStops(ct);
 
-        var stops = favStops.StopIds.Select(si => allStops.FirstOrDefault(s => s.Id == si)).ToList();
+        var stops = favStops.StopIds.Select(si =>
+            allStops
+                .FirstOrDefault(s => s.Id == si))
+                .Where(s => s != null)
+                .ToList();
 
-        var buttons = stops.Select(stop => InlineKeyboardButton.WithCallbackData(
-                text: stop.Name,
-                callbackData: $"{CallbackData.Route}{stop.Id}"));
+        var buttons = stops
+            .Select(stop => 
+                InlineKeyboardButton.WithCallbackData(
+                    text: stop!.Name,
+                    callbackData: $"{reason}{stop.Id}"));
 
         var inlineKeyboard = new InlineKeyboardMarkup(buttons.Chunk(1));
 
+        string textReason ="";
+        if (reason == CallbackData.DeleteFav)
+            textReason = "удаления";
+        else if (reason == CallbackData.ShowArrivalTime)
+            textReason = "просмотра";
+            
         await _botClient.SendMessage(
             chatId: chatId,
-            text: "Выберите остановку из списка ниже:",
+            text: $"Выберите остановку из списка ниже для {textReason}:",
             replyMarkup: inlineKeyboard,
             cancellationToken: ct);
     }

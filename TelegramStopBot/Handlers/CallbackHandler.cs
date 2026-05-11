@@ -31,30 +31,34 @@ public class CallbackHandler
     public async Task HandleCallbackAsync(CallbackQuery callbackQuery, CancellationToken ct)
     {
 
-        if (callbackQuery.Data?.StartsWith(CallbackData.Stop) == true)
+        if (callbackQuery.Data?.StartsWith(CallbackData.ShowArrivalTime) == true)
         {
             await HandleShowRoutesRequestAsync(callbackQuery, ct);
         }
-
-        else if (callbackQuery.Data?.StartsWith(CallbackData.Route) == true)
+        else if (callbackQuery.Data?.StartsWith(CallbackData.ShowRoute) == true)
         {
             await HandleShowArrivalTimesByStopsRequestAsync(callbackQuery, ct);
         }
-
-        else if (callbackQuery.Data?.StartsWith(CallbackData.Fav) == true) 
+        else if (callbackQuery.Data?.StartsWith(CallbackData.AddFav) == true)
         {
-            await AddFavStopsAsync(callbackQuery, ct);
+            await AddFavStopAsync(callbackQuery, ct);
+        }
+        else if (callbackQuery.Data?.StartsWith(CallbackData.DeleteFav) == true) 
+        {
+            await DeleteFavStopAsync(callbackQuery, ct);
         }
     }
 
     private async Task HandleShowRoutesRequestAsync(CallbackQuery callbackQuery, CancellationToken ct)
     {
         var data = callbackQuery.Data;
-        var idString = data?.Replace(CallbackData.Stop, "");
+        var idString = data?.Replace(CallbackData.ShowArrivalTime, "");
 
         if (int.TryParse(idString, out int stopId))
         {
-            var choosedRoute = (await _stopService.GetStops(ct)).FirstOrDefault(s => s.Id == stopId);
+            var choosedRoute = (await _stopService
+                .GetStops(ct))
+                .FirstOrDefault(s => s.Id == stopId);
 
             if (choosedRoute == null)
             {
@@ -68,9 +72,10 @@ public class CallbackHandler
 
             string targetGroupName = choosedRoute.Name.Replace(". ", ".");
 
-            var routes = (await _stopService.GetStops(ct))
-                    .Where(s => s.Name.Replace(". ", ".").Equals(targetGroupName, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
+            var routes = (await _stopService
+                .GetStops(ct))
+                .Where(s => s.Name.Replace(". ", ".").Equals(targetGroupName, StringComparison.OrdinalIgnoreCase))
+                .ToList();
 
             var buttons = routes.Select(stop =>
             {
@@ -80,7 +85,7 @@ public class CallbackHandler
 
                 return InlineKeyboardButton.WithCallbackData(
                     text: buttonText,
-                    callbackData: $"{CallbackData.Route}{stop.Id}"
+                    callbackData: $"{CallbackData.ShowRoute}{stop.Id}"
                 );
             });
 
@@ -103,12 +108,14 @@ public class CallbackHandler
     private async Task HandleShowArrivalTimesByStopsRequestAsync(CallbackQuery callbackQuery, CancellationToken ct)
     {
         var data = callbackQuery.Data;
-        var idString = data.Replace(CallbackData.Route, "");
+        var idString = data.Replace(CallbackData.ShowRoute, "");
 
         ExtStopPlace? stop;
         if (int.TryParse(idString, out int stopId))
         {
-            stop = (await _stopService.GetStops(ct)).FirstOrDefault(s => s.Id == stopId);
+            stop = (await _stopService
+                .GetStops(ct))
+                .FirstOrDefault(s => s.Id == stopId);
             if (stop == null)
             {
                 await _botClient.AnswerCallbackQuery(
@@ -136,13 +143,15 @@ public class CallbackHandler
             }
             else if (callbackQuery.Message != null)
             {
+                var chatId = callbackQuery.Message!.Chat.Id;
+
                 InlineKeyboardMarkup? inlineKeyboard;
-                if (!await _favStopsService.CheckIsFavouriteStops(new FavExistRequest(callbackQuery.Message.Chat.Id, stopId), ct))
+                if (!await _favStopsService.CheckIsFavouriteStops(new FavExistRequest(chatId, stopId), ct))
                 {
                     var button = InlineKeyboardButton.WithCallbackData(
                     text: $"Добавить остановку {stop.Name} в избранное",
 
-                    callbackData: $"{CallbackData.Fav}{stop.Id}");
+                    callbackData: $"{CallbackData.AddFav}{stop.Id}");
 
                     inlineKeyboard = new InlineKeyboardMarkup(button);
                 }
@@ -152,7 +161,7 @@ public class CallbackHandler
                 }
 
                 await _botClient.EditMessageText(
-                chatId: callbackQuery.Message.Chat.Id,
+                chatId: chatId,
                 messageId: callbackQuery.Message.MessageId,
                 text: replyText,
                 replyMarkup: inlineKeyboard,
@@ -167,24 +176,50 @@ public class CallbackHandler
 
     }
 
-    private async Task AddFavStopsAsync(CallbackQuery callbackQuery, CancellationToken ct)
+    private async Task AddFavStopAsync(CallbackQuery callbackQuery, CancellationToken ct)
     {
         var data = callbackQuery.Data;
-        var idString = data!.Replace(CallbackData.Fav, "");
+        var idString = data!.Replace(CallbackData.AddFav, "");
+        var chatId = callbackQuery.Message!.Chat.Id;
+
         if (int.TryParse(idString, out int stopId))
         {
-            await _favStopsService.AddFavoriteStopsByChatIdAsync(new FavStopsAddRequest(callbackQuery.Message!.Chat.Id, stopId), ct);
+            await _favStopsService.AddFavoriteStopsByChatIdAsync(new FavStopsAddRequest(chatId, stopId), ct);
         }
-        else 
+        else
         {
             throw new Exception("Некорректный тип данных");
         }
 
         await _botClient.EditMessageText(
-            chatId: callbackQuery.Message.Chat.Id,
+            chatId: chatId,
             messageId: callbackQuery.Message.MessageId,
             text: callbackQuery.Message.Text + "\n*Добавлено в избранное*",
             parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+            cancellationToken: ct);
+    }
+
+    private async Task DeleteFavStopAsync(CallbackQuery callbackQuery, CancellationToken ct) 
+    {
+        var data = callbackQuery.Data;
+        var idString = data!.Replace(CallbackData.DeleteFav, "");
+        var chatId = callbackQuery.Message!.Chat.Id;
+
+        if (int.TryParse(idString, out int stopId))
+        {
+            await _favStopsService.DeleteFavoriteStopsByChatIdAsync(new FavStopsDeleteRequest(chatId, stopId), ct);
+        }
+        else
+        {
+            throw new Exception("Некорректный тип данных");
+        }
+
+        await _botClient.EditMessageText(
+            chatId: chatId,
+            messageId: callbackQuery.Message.MessageId,
+            text: "\n*Остановка удалена из избранного!*",
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+            replyMarkup: null,
             cancellationToken: ct);
     }
 }

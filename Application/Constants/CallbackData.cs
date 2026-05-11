@@ -6,12 +6,12 @@ namespace Application.Constants
 {
     public static class CallbackData
     {
-        public const string Stop = "stop:";
+        public const string ShowArrivalTime = "stop:";
 
-        public const string Choose = "choose:";
+        public const string ShowRoute = "route:";
 
-        public const string Route = "route:";
+        public const string AddFav = "fav:";
 
-        public const string Fav = "fav:";
+        public const string DeleteFav = "deleteFav:";
     }
 }

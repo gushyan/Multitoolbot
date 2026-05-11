@@ -38,7 +38,10 @@ namespace Services.Classes
         public async Task<List<IGrouping<string, ExtStopPlace>>> SearchGroupStops(string text, CancellationToken ct)
         {
             var stops = await SearchStopsAsync(text, ct);
-            return stops.GroupBy(s => s.Name.Replace(". ", "."), StringComparer.OrdinalIgnoreCase).ToList();
+            return stops
+                .GroupBy(s => 
+                    s.Name.Replace(". ", "."), StringComparer.OrdinalIgnoreCase)
+                .ToList();
         }
 
         public async Task<IReadOnlyList<ExtStopPlace>> GetStops(CancellationToken ct)

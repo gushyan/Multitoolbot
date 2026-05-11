@@ -12,6 +12,6 @@ namespace Application.Constants
 
         public const string Favs = "/favs";
 
-        public const string AddFav = "/addfav";
+        public const string DeleteFav = "/deletefav";
     }
 }

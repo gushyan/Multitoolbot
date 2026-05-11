@@ -40,7 +40,7 @@ public class InlineHandler
                 Description = s.Note,
                 InputMessageContent = messageContent,
                 ReplyMarkup = new InlineKeyboardMarkup(
-                                InlineKeyboardButton.WithCallbackData("Узнать время прибытия", $"{CallbackData.Route}{s.Id}"))
+                                InlineKeyboardButton.WithCallbackData("Узнать время прибытия", $"{CallbackData.ShowRoute}{s.Id}"))
             };
         }
             );

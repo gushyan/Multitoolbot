@@ -30,7 +30,8 @@ namespace Services.Classes
 
         public async Task DeleteFavoriteStopsByChatIdAsync(FavStopsDeleteRequest deleteRequest, CancellationToken ct)
         {
-            var countLines = await _dbcontext.FavStops.Where(f => f.ChatId == deleteRequest.ChatId && f.StopId == deleteRequest.StopId)
+            var countLines = await _dbcontext.FavStops
+                .Where(f => f.ChatId == deleteRequest.ChatId && f.StopId == deleteRequest.StopId)
                 .ExecuteDeleteAsync(ct);
 
             if (countLines == 0)
@@ -44,6 +45,9 @@ namespace Services.Classes
                 .Where(f => f.ChatId == chatId)
                 .Select(f => f.StopId)
                 .ToListAsync(ct);
+
+            if (favStops.Count == 0)
+                throw new KeyNotFoundException("В избранном нет остановок");
 
             return new FavStopsResponse(chatId, favStops);
         }

@@ -6,7 +6,7 @@ namespace Application.Constants
 {
     public static class CallbackData
     {
-        public const string ShowArrivalTime = "stop:";
+        public const string ShowStop = "stop:";
 
         public const string ShowRoute = "route:";
 

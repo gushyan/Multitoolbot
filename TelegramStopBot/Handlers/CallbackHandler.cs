@@ -31,7 +31,7 @@ public class CallbackHandler
     public async Task HandleCallbackAsync(CallbackQuery callbackQuery, CancellationToken ct)
     {
 
-        if (callbackQuery.Data?.StartsWith(CallbackData.ShowArrivalTime) == true)
+        if (callbackQuery.Data?.StartsWith(CallbackData.ShowStop) == true)
         {
             await HandleShowRoutesRequestAsync(callbackQuery, ct);
         }
@@ -52,7 +52,7 @@ public class CallbackHandler
     private async Task HandleShowRoutesRequestAsync(CallbackQuery callbackQuery, CancellationToken ct)
     {
         var data = callbackQuery.Data;
-        var idString = data?.Replace(CallbackData.ShowArrivalTime, "");
+        var idString = data?.Replace(CallbackData.ShowStop, "");
 
         if (int.TryParse(idString, out int stopId))
         {

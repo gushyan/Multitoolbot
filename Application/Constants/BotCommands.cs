@@ -13,5 +13,7 @@ namespace Application.Constants
         public const string Favs = "/favs";
 
         public const string DeleteFav = "/deletefav";
+
+        public const string Contact = "/contact";
     }
 }

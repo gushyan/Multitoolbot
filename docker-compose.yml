@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:16-alpine
-    restart: always
+    restart: "no"
 
     shm_size: 64mb
 
@@ -31,9 +31,24 @@ services:
       timeout: 5s
       retries: 5
 
+  migrator:
+    build:
+      context: .
+      dockerfile: MultiToolBot/Dockerfile
+
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: /app/efbundle
+    command: --connection "Host=db;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}" --no-color
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=db;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      BotSettings__Token: ${BOT_TOKEN}
+
   mybot:
     container_name: bus_bot
-    restart: always
+    restart: "no"
 
     build:
       context: .
@@ -42,6 +57,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
 
     environment:
       DOTNET_ENVIRONMENT: Production

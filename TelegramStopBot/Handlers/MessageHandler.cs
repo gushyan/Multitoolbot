@@ -29,15 +29,18 @@ public class MessageHandler
         var task = text switch
         {
             BotCommands.Start => _botClient.SendMessage(message.Chat.Id, "Привет! Я бот, который показывает время прибытия автобусов на любой остановке.\r\n" +
-            "Просто отправь мне название (например, ЦУМ), и я пришлю расписание!\r\n" +
             "Кстати, у меня открытый исходный код: https://github.com/gushyan/StopsBot", cancellationToken: ct),
-            BotCommands.Help => _botClient.SendMessage(message.Chat.Id, "Отправь название остановки и выбери нужную из списка." +
-            "Напиши моё имя и название остановки.\r\n" +
-            " Например: @твое_имя_бота ЦУМ\r\n" +
-            "Выбери остановку из всплывающего списка, и расписание отправится прямо в текущий чат!", cancellationToken: ct),
-            BotCommands.Favs => ShowFavStopsAsync(message.Chat.Id, CallbackData.ShowArrivalTime, ct),
+            BotCommands.Help => _botClient.SendMessage(message.Chat.Id, "1. Чтобы получить расписание в боте, отправь название остановки и выбери нужную из списка.\r\n" +
+            "2. Чтобы получить расписание в любом другом чате, напиши моё имя и название остановки.\r\n" +
+            "Например: @NeMultitool_bot ЦУМ\r\n" +
+            "Выбери остановку из всплывающего списка, и расписание отправится прямо в текущий чат!\r\n" +
+            "3. Также можно добавить остановку в избранное. Для этого найди остановку через поиск в боте, а затем нажми кнопку \"Добавить (название остановки) в избранное\". \r\n" +
+            $"4. Для того чтобы получить избранные остановки, нужно использовать команду {BotCommands.Favs}.\r\n" + 
+            $"5. Чтобы удалить остановку из избранного, используй команду {BotCommands.DeleteFav} и выбери нужную остановку.", cancellationToken: ct),
+            BotCommands.Favs => ShowFavStopsAsync(message.Chat.Id, CallbackData.ShowRoute, ct),
             BotCommands.DeleteFav => ShowFavStopsAsync(message.Chat.Id, CallbackData.DeleteFav, ct),
-            _ => ShowStopsAsync(text, CallbackData.ShowArrivalTime, message.Chat.Id, ct)
+            BotCommands.Contact => _botClient.SendMessage(message.Chat.Id, "По всем вопросам обращайтесь к @zhong_ly."),
+            _ => ShowStopsAsync(text, CallbackData.ShowStop, message.Chat.Id, ct)
         };
 
         await task;
@@ -91,7 +94,7 @@ public class MessageHandler
         string textReason ="";
         if (reason == CallbackData.DeleteFav)
             textReason = "удаления";
-        else if (reason == CallbackData.ShowArrivalTime)
+        else if (reason == CallbackData.ShowStop)
             textReason = "просмотра";
             
         await _botClient.SendMessage(
